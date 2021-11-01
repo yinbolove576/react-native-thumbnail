@@ -2,6 +2,7 @@ package me.hauvo.thumbnail;
 
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
@@ -13,6 +14,7 @@ import com.facebook.react.bridge.WritableMap;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.UUID;
 
@@ -33,7 +35,15 @@ public class RNThumbnailModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void get(String filePath, Promise promise) {
-        filePath = filePath.replace("file://", "");
+        if (filePath.contains("content")) {
+            try {
+                filePath = RealPathUtil.getRealPathFromURI(this.reactContext, Uri.parse(filePath));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            filePath = filePath.replace("file://", "");
+        }
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(filePath);
         Bitmap image = retriever.getFrameAtTime(1000000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
